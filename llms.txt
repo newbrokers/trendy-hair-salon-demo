@@ -16,7 +16,7 @@ Krinou 8, Agios Athanasios 4103
 
 ## Contact
 Phone: +357 25 315834
-Google Maps: https://www.google.com/maps/dir/?api=1&destination=34.6902776,33.071003
+Google Maps: https://www.google.com/maps/search/?api=1&query=34.6902776,33.071003
 
 ## Key Facts
 - 4.9-star Google rating from 16 (this location) reviews

@@ -10,7 +10,7 @@ last_updated: 2026-08-31
 A neighborhood hair salon with a 4.9 rating, easy parking, and a stylist team clients specifically ask for by name.
 
 **Call to book:** +357 25 315834
-**Get directions:** https://www.google.com/maps/dir/?api=1&destination=34.6902776,33.071003
+**Google Maps:** https://www.google.com/maps/search/?api=1&query=34.6902776,33.071003
 
 ## Services
 Sample categories — replace with the real menu before publishing:
@@ -36,7 +36,7 @@ point to show what a real site could look like.
 
 Krinou 8, Agios Athanasios 4103
 Phone: +357 25 315834
-Maps: https://www.google.com/maps/dir/?api=1&destination=34.6902776,33.071003
+Maps: https://www.google.com/maps/search/?api=1&query=34.6902776,33.071003
 
 ---
 Concept design built from Trendy Hair Salon's public Google Business listing — not
