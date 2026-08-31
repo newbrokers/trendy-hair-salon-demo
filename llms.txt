@@ -1,0 +1,34 @@
+# Trendy Hair Salon
+
+## About
+Trendy Hair Salon is an easy-to-reach neighborhood salon in Agios Athanasios, with straightforward parking and a small, well-reviewed stylist team. Trendy Hair Salon is a hair salon in Agios Athanasios, Limassol, Cyprus.
+
+## Services
+Sample categories only — replace with Trendy Hair Salon's actual current menu and
+pricing before this file is published anywhere real:
+- Haircuts: Precision cuts for men and women, done by a stylist team clients ask for by name.
+- Color & Highlights: Full color and highlight services using professional-grade products.
+- Blowouts & Styling: Finishing styles for everyday wear or a night out.
+- Beard & Grooming: Beard shaping and grooming to round out a full service visit.
+
+## Location
+Krinou 8, Agios Athanasios 4103
+
+## Contact
+Phone: +357 25 315834
+Google Maps: https://www.google.com/maps/place/Trendy+Hair+Salon/data=!4m7!3m6!1s0x14e73367e8f29be1:0x5356f79225e4d706!8m2!3d34.6902776!4d33.071003
+
+## Key Facts
+- 4.9-star Google rating from 16 (this location) reviews
+- Existing web presence: Unclaimed Google listing — no website. Part of a 3-location chain (2 Nicosia branches + this one); Facebook page "Trendy hair salons" has 1.4K followers
+- Stylist referenced by name in customer reviews: Valentino
+- Facts current as of 2026-08-31, sourced from the business's public Google Business listing
+
+## Status
+This is a concept demo site built from Trendy Hair Salon's public Google Business
+listing as an unsolicited outreach sample — it is not affiliated with or
+published by Trendy Hair Salon.
+
+## Markdown Mirror
+Clean, plain-text version of this page for AI readers:
+- https://trendy-hair-salon-demo.vercel.app/index.md
