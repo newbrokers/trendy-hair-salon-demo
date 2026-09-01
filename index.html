@@ -199,6 +199,17 @@
   .trust .item { min-width: 140px; }
   .trust .num { font-size: 28px; font-weight: 700; color: var(--accent-dark); }
   .trust .label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  @media (max-width: 640px) {
+    /* All 3 stats in one row on phones — the 140px min-width plus 40px
+       gaps above needs ~500px, which wraps the 3rd item to its own line
+       on any phone. Drop the min-width, shrink the gap and type instead;
+       a long neighborhood name (e.g. "Agios Athanasios") is still free to
+       wrap to a 2nd line within its own column without breaking the row. */
+    .trust { gap: 10px; padding: 28px 20px; flex-wrap: nowrap; }
+    .trust .item { min-width: 0; flex: 1 1 0; }
+    .trust .num { font-size: 19px; }
+    .trust .label { font-size: 10.5px; white-space: nowrap; }
+  }
 
   section { padding: 76px 24px; }
   .section-head { text-align: center; max-width: 560px; margin: 0 auto 48px; }
