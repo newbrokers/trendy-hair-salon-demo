@@ -436,11 +436,9 @@
   var wrapper = document.querySelector('.hero-scroll-wrapper');
   var canvas = document.getElementById('hero-canvas');
   if (!wrapper || !canvas) return;
-  var pinned = canvas.closest('.hero-pinned');
   var ctx = canvas.getContext('2d');
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var images = [];
-  var released = false;
 
   function resizeCanvas() {
     canvas.width = canvas.clientWidth;
@@ -468,21 +466,6 @@
     var rect = wrapper.getBoundingClientRect();
     var scrollableDistance = wrapper.offsetHeight - window.innerHeight;
     if (scrollableDistance <= 0) { drawFrame(0); return; }
-    // Once the scroll passes the point where the sticky pin would release,
-    // the last frame is already drawn and the canvas stops changing — but
-    // the browser keeps compositing this large sticky layer as it slides
-    // away with the rest of the page, which on some GPUs/drivers can
-    // produce rendering artifacts (stale/corrupted tiles) over that stretch
-    // of scroll. Since there's nothing left to animate at that point anyway,
-    // hide the whole pinned layer immediately instead of letting it keep
-    // compositing — this removes it as a composited layer the moment it's
-    // done, so nothing below can be corrupted by it. It reappears instantly
-    // on the way back up.
-    if (-rect.top >= scrollableDistance) {
-      if (pinned && !released) { pinned.style.visibility = 'hidden'; released = true; }
-      return;
-    }
-    if (pinned && released) { pinned.style.visibility = ''; released = false; }
     var progress = Math.min(Math.max(-rect.top / scrollableDistance, 0), 1);
     var frameIndex = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
     drawFrame(frameIndex);
