@@ -452,25 +452,38 @@
   var images = [];
   var loaded = [];
   var currentFrame = -1;
+  // Cap the backing-store resolution at 2x CSS pixels, same as the
+  // katsioni-dental reference — an uncapped devicePixelRatio (3, 3.5 on many
+  // phones) would make the canvas's actual GPU texture up to ~3x taller and
+  // wider than needed, multiplying the memory the GPU has to hold and
+  // recomposite on every scroll tick. Capping it bounds that cost on exactly
+  // the higher-end mobile GPUs most prone to texture-corruption artifacts.
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
 
   function resizeCanvas() {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    var w = canvas.clientWidth;
+    var h = canvas.clientHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   function drawFrame(index) {
     var img = images[index];
     if (!img || !loaded[index]) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var canvasRatio = canvas.width / canvas.height;
+    var cw = canvas.clientWidth;
+    var ch = canvas.clientHeight;
+    if (!cw || !ch) return;
+    ctx.clearRect(0, 0, cw, ch);
+    var canvasRatio = cw / ch;
     var imgRatio = img.naturalWidth / img.naturalHeight;
     var drawWidth, drawHeight, offsetX, offsetY;
     if (imgRatio > canvasRatio) {
-      drawHeight = canvas.height; drawWidth = drawHeight * imgRatio;
-      offsetX = (canvas.width - drawWidth) / 2; offsetY = 0;
+      drawHeight = ch; drawWidth = drawHeight * imgRatio;
+      offsetX = (cw - drawWidth) / 2; offsetY = 0;
     } else {
-      drawWidth = canvas.width; drawHeight = drawWidth / imgRatio;
-      offsetX = 0; offsetY = (canvas.height - drawHeight) / 2;
+      drawWidth = cw; drawHeight = drawWidth / imgRatio;
+      offsetX = 0; offsetY = (ch - drawHeight) / 2;
     }
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   }
@@ -535,7 +548,12 @@
       })(i);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', function () { resizeCanvas(); currentFrame = -1; updateFrameFromScroll(); });
+    window.addEventListener('resize', function () {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      resizeCanvas();
+      currentFrame = -1;
+      updateFrameFromScroll();
+    });
     updateFrameFromScroll();
   }
 
