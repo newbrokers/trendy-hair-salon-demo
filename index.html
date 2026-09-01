@@ -96,18 +96,18 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.8), 0 3px 10px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35);
   }
 
-  /* ScrollScrub hero variant (video sites only — inert for image-hero sites).
-     .hero-pinned is `fixed` (not `sticky`) and JS shows/hides it in lockstep
-     with the wrapper's own height, which is sized to exactly the scroll
-     distance the animation needs — no extra trailing viewport. With `sticky`,
-     the pinned box stays in normal document flow after it unsticks, so it
-     visibly slides away over one more viewport of scroll before the next
-     section appears; hiding it early then leaves a gap the wrapper still
-     reserves. `fixed` removes it from flow entirely, so the moment the last
-     frame is behind us, hiding it and revealing the next section happen at
-     the exact same scroll pixel — a clean cut, no slide, no gap. */
-  .hero-scroll-wrapper { position: relative; height: 140vh; }
-  .hero-pinned { position: fixed; top: 0; left: 0; right: 0; height: 100vh; min-height: 0; overflow: hidden; background: none; padding: 0; }
+  /* ScrollScrub hero — ported directly from the katsioni-dental reference
+     site (proven, no pink-box corruption there): a plain `position: sticky`
+     pinned box inside a taller wrapper, with NO JS visibility/position
+     toggling of any kind. The browser's own native sticky-unstick handles
+     the transition to the next section — instant, zero gap, no lingering
+     frame — entirely on its own, without any style being mutated mid-scroll.
+     The previous `fixed` + JS-toggled-visibility approach mutated a style
+     on every scroll tick right around the canvas, which is the likely
+     source of the GPU-compositing "pink box" corruption; this port removes
+     that mutation completely. */
+  .hero-scroll-wrapper { position: relative; height: 220vh; }
+  .hero-pinned { position: sticky; top: 0; height: 100vh; overflow: hidden; background: none; padding: 0; }
   #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: #1a1512; z-index: 0; }
   .hero-gradient {
     position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -115,12 +115,12 @@
   }
   .hero-pinned .hero-inner { position: relative; z-index: 2; }
   .hero-pinned .badge { z-index: 3; }
-  @media (max-width: 768px) {
-    .hero-scroll-wrapper { height: 100vh; }
+  @media (max-width: 980px) {
+    .hero-scroll-wrapper { height: 180vh; }
   }
   @media (prefers-reduced-motion: reduce) {
     .hero-scroll-wrapper { height: auto; }
-    .hero-pinned { position: relative; top: auto; left: auto; right: auto; visibility: visible !important; }
+    .hero-pinned { position: relative; top: auto; }
   }
 
   /* Split hero: static photo pane + a narrower ScrollScrub video pane beside it */
@@ -446,9 +446,12 @@
   var canvas = document.getElementById('hero-canvas');
   if (!wrapper || !canvas) return;
   var pinned = canvas.closest('.hero-pinned');
+  if (!pinned) return;
   var ctx = canvas.getContext('2d');
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var images = [];
+  var loaded = [];
+  var currentFrame = -1;
 
   function resizeCanvas() {
     canvas.width = canvas.clientWidth;
@@ -457,10 +460,10 @@
 
   function drawFrame(index) {
     var img = images[index];
-    if (!img || !img.complete || !img.naturalWidth) return;
+    if (!img || !loaded[index]) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     var canvasRatio = canvas.width / canvas.height;
-    var imgRatio = img.width / img.height;
+    var imgRatio = img.naturalWidth / img.naturalHeight;
     var drawWidth, drawHeight, offsetX, offsetY;
     if (imgRatio > canvasRatio) {
       drawHeight = canvas.height; drawWidth = drawHeight * imgRatio;
@@ -472,26 +475,35 @@
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   }
 
-  function updateFrameFromScroll() {
-    var rect = wrapper.getBoundingClientRect();
-    var scrollableDistance = wrapper.offsetHeight;
-    if (scrollableDistance <= 0) { drawFrame(0); return; }
-    // .hero-pinned is `fixed`, not `sticky` — it isn't part of document flow,
-    // so it has to be shown/hidden by hand in lockstep with the wrapper's
-    // own bounds. It stays visible from page load (rect.top can start
-    // slightly positive — e.g. a nav bar above it in flow — that's still
-    // "not yet scrolled past") all the way through the animation, and hides
-    // only once the wrapper has fully scrolled by, so the section right
-    // after it is what the user sees — no lingering last frame, no reserved
-    // gap.
-    if (rect.bottom <= 0) {
-      if (pinned) pinned.style.visibility = 'hidden';
-      return;
+  // If the exact target frame hasn't finished loading yet (fast scroll,
+  // slow network), draw the nearest frame that HAS loaded instead of
+  // leaving the canvas blank or stuck on a stale frame — same fallback
+  // the katsioni-dental reference uses.
+  function nearestLoadedFrame(target) {
+    if (loaded[target]) return target;
+    for (var d = 1; d < FRAME_COUNT; d++) {
+      if (target - d >= 0 && loaded[target - d]) return target - d;
+      if (target + d < FRAME_COUNT && loaded[target + d]) return target + d;
     }
-    if (pinned) pinned.style.visibility = '';
-    var progress = Math.min(Math.max(-rect.top / scrollableDistance, 0), 1);
-    var frameIndex = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
-    drawFrame(frameIndex);
+    return -1;
+  }
+
+  function updateFrameFromScroll() {
+    var wrapRect = wrapper.getBoundingClientRect();
+    // Native sticky math: the scrollable range is the wrapper's own extra
+    // height beyond the pinned element's height — NOT the wrapper's full
+    // height. This is what makes progress hit exactly 1 at the same scroll
+    // pixel where the browser natively unsticks the element, so the last
+    // frame and the natural slide-away line up with zero gap.
+    var scrollableDistance = wrapper.offsetHeight - pinned.offsetHeight;
+    var progress = scrollableDistance > 0 ? (-wrapRect.top / scrollableDistance) : 0;
+    progress = Math.min(Math.max(progress, 0), 1);
+    var target = Math.min(FRAME_COUNT - 1, Math.floor(progress * FRAME_COUNT));
+    var toDraw = nearestLoadedFrame(target);
+    if (toDraw !== -1 && toDraw !== currentFrame) {
+      currentFrame = toDraw;
+      drawFrame(toDraw);
+    }
   }
 
   var ticking = false;
@@ -506,20 +518,24 @@
     resizeCanvas();
     if (prefersReducedMotion) {
       var img = new Image();
+      img.onload = function () { loaded[0] = true; drawFrame(0); };
       img.src = framePath(1);
-      img.onload = function () { images[0] = img; drawFrame(0); };
+      images[0] = img;
       return;
     }
-    for (var i = 1; i <= FRAME_COUNT; i++) {
-      (function (i) {
+    for (var i = 0; i < FRAME_COUNT; i++) {
+      (function (idx) {
         var img = new Image();
-        img.src = framePath(i);
-        img.onload = function () { if (i === 1) drawFrame(0); };
-        images[i - 1] = img;
+        img.onload = function () {
+          loaded[idx] = true;
+          if (idx === 0 && currentFrame === -1) { currentFrame = 0; drawFrame(0); }
+        };
+        img.src = framePath(idx + 1);
+        images[idx] = img;
       })(i);
     }
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', function () { resizeCanvas(); updateFrameFromScroll(); });
+    window.addEventListener('resize', function () { resizeCanvas(); currentFrame = -1; updateFrameFromScroll(); });
     updateFrameFromScroll();
   }
 
