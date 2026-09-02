@@ -63,6 +63,14 @@
     display: flex; align-items: center;
     color: inherit;
   }
+  /* While the header floats over the hero photo, its brightness varies by
+     site/crop — a plain white brand wordmark can wash out against a light
+     patch of photo. A shadow gives it a floor of contrast without needing
+     to know what's behind it. Dropped once solid, since var(--text) on
+     var(--bg) already has plenty of contrast on its own. */
+  header:not(.header-solid) .brand {
+    text-shadow: 0 1px 3px rgba(0,0,0,0.45), 0 2px 12px rgba(0,0,0,0.3);
+  }
   .brand img { display: block; height: 42px; width: auto; }
   @media (max-width: 420px) {
     .brand img { height: 34px; }
@@ -85,11 +93,19 @@
     white-space: nowrap;
     transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), border-color 160ms var(--ease-out);
   }
+  /* Same reasoning as .brand above: a dark scrim behind the pill (not just
+     a border) gives the white label/icon a guaranteed-legible backdrop
+     over whatever part of the photo it happens to sit on. Solid state
+     overrides back to a plain outline on the opaque header. */
+  header:not(.header-solid) .map-btn {
+    background: rgba(0,0,0,0.32);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.2);
+  }
   header.header-solid .map-btn { border-color: rgba(0,0,0,0.16); }
   .map-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
   .map-btn:active { transform: scale(0.97); }
   @media (hover: hover) and (pointer: fine) {
-    .map-btn:hover { background-color: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.85); }
+    header:not(.header-solid) .map-btn:hover { background-color: rgba(0,0,0,0.44); border-color: rgba(255,255,255,0.85); }
     header.header-solid .map-btn:hover { background-color: rgba(0,0,0,0.045); border-color: rgba(0,0,0,0.26); }
   }
   @media (max-width: 420px) {
